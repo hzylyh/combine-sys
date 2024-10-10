@@ -20,6 +20,7 @@
 #include "main.h"
 #include "dma.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -91,6 +92,7 @@ int main(void)
   int CurrentPage = 1;
   int pageIndex = 1;
   int checked = 0;
+  unsigned char ch[20] = {0};
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -113,8 +115,13 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_TIM3_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   Show_Portal();
+  uint8_t byteNumber = 0x5a;
+  char *str = "IT SEND\r\n";
+  HAL_UART_Transmit(&huart1, &byteNumber, 1, HAL_MAX_DELAY);
+  HAL_UART_Transmit(&huart1, (const uint8_t *)str, strlen(str), HAL_MAX_DELAY);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -124,6 +131,14 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    HAL_UART_Receive(&huart1, ch, 20, 100);
+    HAL_UART_Transmit(&huart1, ch, strlen((const char *)ch), 100);
+    if (!strcmp((const char *)ch, "open"))
+    {
+      HAL_UART_Transmit(&huart1, (const uint8_t *)"LED ON\r\n", strlen((const char *)"LED ON\r\n"), HAL_MAX_DELAY);
+    }
+    memset(ch, 0, strlen((const char *)ch));
+    
     KeyNum = Key_GetNum();
     if (checked == 1)
     {
@@ -149,6 +164,7 @@ int main(void)
       if (KeyNum == 1)
       {
         CurrentPage = Select_Menu(pageIndex);
+        checked = 1;
       }
       
       if (KeyNum == 2)
@@ -180,6 +196,7 @@ int main(void)
       if (KeyNum == 1)
       {
         Set_DotScreen_Status(pageIndex);
+        checked = 1;
       }
       
       if (KeyNum == 2)
@@ -200,9 +217,6 @@ int main(void)
     {
 
     }
-    
-    
-    
 
   }
   /* USER CODE END 3 */
